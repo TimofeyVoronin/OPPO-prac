@@ -1,17 +1,26 @@
 # main.py
 
-# Импортируем необходимые классы и исключения из модулей sea и exceptions
+import shlex
 from sea import Sea
 from exceptions import InvalidInputError
 
-def read_input():
-    """Читает строку ввода от пользователя.
+def read_input(filename='sea.txt'):
+    """Читает строки из файла.
+
+    Args:
+        filename (str, optional): Имя файла для чтения. По умолчанию 'sea.txt'.
 
     Returns:
-        str: Введенная пользователем строка.
+        list: Список строк из файла.
+
+    Raises:
+        FileNotFoundError: Если файл не найден.
     """
-    # Просим пользователя ввести данные о море
-    return input("Введите название моря, глубину и соленость через пробел: ")
+    try:
+        with open(filename, 'r', encoding='utf-8') as file:
+            return file.readlines()
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Файл '{filename}' не найден.")
 
 def parse_input(input_str):
     """Разбирает входную строку и извлекает название, глубину и соленость.
@@ -25,69 +34,37 @@ def parse_input(input_str):
     Raises:
         InvalidInputError: Если входная строка некорректна.
     """
-    # Удаляем пробелы в начале и конце строки и разбиваем по пробелам
-    tokens = input_str.strip().split()
-    # Проверяем, что в строке достаточно токенов
+    # Используем shlex.split для корректной обработки кавычек
+    tokens = shlex.split(input_str.strip())
     if len(tokens) < 3:
         raise InvalidInputError("Недостаточно данных для создания объекта Sea.")
 
     try:
-        # Пробуем преобразовать последние два токена в числа (глубина и соленость)
-        salinity = float(tokens[-1])   # Последний токен - соленость
-        depth = float(tokens[-2])      # Предпоследний токен - глубина
+        salinity = float(tokens[-1])
+        depth = float(tokens[-2])
     except ValueError:
-        # Если преобразование не удалось, выбрасываем исключение
         raise InvalidInputError("Глубина и соленость должны быть числовыми значениями.")
 
-    # Остальные токены считаем названием моря
     name_tokens = tokens[:-2]
-    # Проверяем, что название не пустое
     if not name_tokens:
         raise InvalidInputError("Название моря не может быть пустым.")
 
-    # Объединяем токены названия обратно в строку
     name = ' '.join(name_tokens)
     return name, depth, salinity
-
-def save_to_file(sea, filename='моря.txt'):
-    """Сохраняет объект Sea в файл.
-
-    Args:
-        sea (Sea): Объект Sea для сохранения.
-        filename (str, optional): Имя файла для сохранения. По умолчанию 'моря.txt'.
-    """
-    try:
-        # Открываем файл для добавления информации
-        with open(filename, 'a', encoding='utf-8') as file:
-            # Записываем строковое представление объекта Sea в файл
-            file.write(f'{sea}\n')
-    except IOError as e:
-        # Выводим сообщение об ошибке, если не удалось записать в файл
-        print(f"Ошибка при записи в файл: {e}")
 
 def main():
     """Основная функция программы."""
     try:
-        # Читаем ввод пользователя
-        input_str = read_input()
-        # Разбираем введенную строку и извлекаем данные
-        name, depth, salinity = parse_input(input_str)
-        # Создаем объект Sea с полученными данными
-        sea = Sea(name, depth, salinity)
-        # Выводим информацию об объекте Sea
-        print(sea)
-        # Сохраняем информацию об объекте Sea в файл
-        save_to_file(sea)
-    except InvalidInputError as e:
-        # Обрабатываем ошибки, связанные с некорректным вводом данных
-        print(f"Ошибка ввода: {e}")
-    except ValueError as e:
-        # Обрабатываем ошибки, связанные с неверными значениями глубины или солености
-        print(f"Ошибка значения: {e}")
-    except Exception as e:
-        # Обрабатываем любые другие непредвиденные ошибки
-        print(f"Непредвиденная ошибка: {e}")
+        input_lines = read_input()
+        for line in input_lines:
+            try:
+                name, depth, salinity = parse_input(line)
+                sea = Sea(name, depth, salinity)
+                print(sea)
+            except (InvalidInputError, ValueError) as e:
+                print(f"Ошибка в строке '{line.strip()}': {e}")
+    except FileNotFoundError as e:
+        print(e)
 
-# Проверяем, что скрипт запущен напрямую, а не импортирован
 if __name__ == '__main__':
     main()
