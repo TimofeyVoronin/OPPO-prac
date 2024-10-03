@@ -14,9 +14,9 @@ class Sea:
         Raises:
             ValueError: Если глубина или соленость имеют некорректные значения.
         """
-        self.name = name  # Устанавливаем название моря
-        self.depth = self.validate_depth(depth)  # Проверяем и устанавливаем глубину
-        self.salinity = self.validate_salinity(salinity)  # Проверяем и устанавливаем соленость
+        self.name = name
+        self.depth = self.validate_depth(depth)
+        self.salinity = self.validate_salinity(salinity)
 
     @staticmethod
     def validate_depth(depth):
@@ -32,8 +32,8 @@ class Sea:
             ValueError: Если глубина отрицательная.
         """
         if depth < 0:
-            raise ValueError("Глубина не может быть отрицательной.")  # Выбрасываем исключение при отрицательной глубине
-        return depth  # Возвращаем корректное значение глубины
+            raise ValueError("Глубина не может быть отрицательной.")
+        return depth
 
     @staticmethod
     def validate_salinity(salinity):
@@ -49,9 +49,9 @@ class Sea:
             ValueError: Если соленость отрицательная.
         """
         if salinity < 0:
-            raise ValueError("Соленость не может быть отрицательной.")  # Выбрасываем исключение при отрицательной солености
-        return salinity  # Возвращаем корректное значение солености
+            raise ValueError("Соленость не может быть отрицательной.")
+        return salinity
 
     def __str__(self):
         """Возвращает строковое представление объекта Sea."""
-        return f'"{self.name}" {self.depth} {self.salinity}'  # Формируем строку для вывода
+        return f'"{self.name}" {self.depth} {self.salinity}'
