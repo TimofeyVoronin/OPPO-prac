@@ -1,34 +1,57 @@
+import shlex
+
 class Моря:
-    # Определяем класс "Моря" с соответствующими свойствами
-    def __init__(self, название, глубина, соленость):
-        self.название = название        # Инициализируем свойство "название"
-        self.глубина = глубина          # Инициализируем свойство "глубина"
-        self.соленость = соленость      # Инициализируем свойство "соленость"
+    def __init__(self, tokens):
+        self.tokens = tokens  # Сохраняем токены в исходном порядке
 
     def __str__(self):
-        # Определяем строковое представление объекта для удобного вывода
-        return f'"{self.название}" {self.глубина} {self.соленость}'
+        return ' '.join(self.tokens)  # Выводим токены без изменения порядка
 
-# Чтение входной строки от пользователя
-s = input()
+# Чтение данных из файла 'sea.txt' и вывод на экран
+with open('sea.txt', 'r', encoding='utf-8') as file:
+    for s in file:
+        lexer = shlex.shlex(s.strip(), posix=False)
+        lexer.whitespace_split = True
+        tokens = list(lexer)
 
-# Разбиение строки на токены по пробелам
-tokens = s.strip().split()
+        if len(tokens) != 3:
+            print(f"Ошибка в строке: {s.strip()}")
+            continue
 
-# Извлечение глубины и солености из последних двух токенов
-соленость = float(tokens[-1])        # Последний токен - соленость
-глубина = float(tokens[-2])          # Предпоследний токен - глубина
+        # Ищем название моря в кавычках
+        sea_name_token = None
+        for t in tokens:
+            if t.startswith('"') and t.endswith('"'):
+                sea_name_token = t
+                break
 
-# Остальные токены составляют название, объединяем их обратно в строку
-название_tokens = tokens[:-2]        # Все токены кроме последних двух
-название = ' '.join(название_tokens) # Объединяем название из отдельных слов
+        if sea_name_token is None:
+            print(f"Ошибка: Название моря должно быть в кавычках в строке: {s.strip()}")
+            continue
 
-# Создаем объект класса "Моря" с полученными данными
-sea = Моря(название, глубина, соленость)
+        sea_name = sea_name_token.strip('"')
+        # Проверяем, что название моря не является числом
+        try:
+            float(sea_name)
+            print(f"Ошибка: Название моря не должно быть числом в строке: {s.strip()}")
+            continue
+        except ValueError:
+            pass  # Название не является числом
 
-# Выводим объект на экран
-print(sea)
+        # Остальные два токена должны быть числами (глубина и соленость)
+        other_tokens = tokens.copy()
+        other_tokens.remove(sea_name_token)
+        try:
+            numbers = [float(t) for t in other_tokens]
+        except ValueError:
+            print(f"Ошибка: Глубина и соленость должны быть числами в строке: {s.strip()}")
+            continue
 
-# Сохраняем данные в текстовый файл
-with open('моря.txt', 'a', encoding='utf-8') as file:
-    file.write(f'{sea}\n')  # Записываем строковое представление объекта в файл
+        # Проверяем, что глубина и соленость не отрицательные
+        if any(n < 0 for n in numbers):
+            print(f"Ошибка: Отрицательные значения недопустимы в строке: {s.strip()}")
+            continue
+
+        # Создаем объект Моря с сохранением исходной последовательности токенов
+        sea = Моря(tokens)
+        print(sea)
