@@ -1,57 +1,70 @@
 # sea.py
 
+import re
+from exceptions import InvalidInputError
+
 class Sea:
     """Класс, представляющий море с соответствующими свойствами."""
 
-    def __init__(self, name, depth, salinity):
+    def __init__(self, tokens):
         """Инициализирует объект Sea.
 
         Args:
-            name (str): Название моря.
-            depth (float): Глубина моря.
-            salinity (float): Соленость моря.
+            tokens (list): Список токенов в исходном порядке.
 
         Raises:
-            ValueError: Если глубина или соленость имеют некорректные значения.
+            InvalidInputError: Если свойства некорректны.
         """
-        self.name = name
-        self.depth = self.validate_depth(depth)
-        self.salinity = self.validate_salinity(salinity)
+        self.tokens = tokens
+        self.name = None
+        self.depth = None
+        self.salinity = None
 
-    @staticmethod
-    def validate_depth(depth):
-        """Проверяет корректность значения глубины.
+        self.parse_tokens()
 
-        Args:
-            depth (float): Значение глубины.
+    def parse_tokens(self):
+        """Разбирает токены для извлечения названия, глубины и солености."""
+        name_token = None
+        depth_token = None
+        salinity_token = None
 
-        Returns:
-            float: Корректное значение глубины.
+        for token in self.tokens:
+            if token.startswith('"') and token.endswith('"'):
+                if name_token is not None:
+                    raise InvalidInputError("Допускается только одно название, заключенное в двойные кавычки.")
+                if token.count('"') != 2:
+                    raise InvalidInputError("Некорректное использование двойных кавычек.")
+                name_token = token
+                self.name = name_token.strip('"')
+                if not self.name:
+                    raise InvalidInputError("Название моря не может быть пустым.")
+                if re.search(r'\d', self.name):
+                    raise InvalidInputError("Название моря не может содержать цифры.")
+            else:
+                if depth_token is None:
+                    depth_token = token
+                elif salinity_token is None:
+                    salinity_token = token
+                else:
+                    raise InvalidInputError("Непредвиденный дополнительный токен.")
 
-        Raises:
-            ValueError: Если глубина отрицательная.
-        """
-        if depth < 0:
-            raise ValueError("Глубина не может быть отрицательной.")
-        return depth
+        if name_token is None:
+            raise InvalidInputError("Название моря должно быть заключено в двойные кавычки.")
 
-    @staticmethod
-    def validate_salinity(salinity):
-        """Проверяет корректность значения солености.
+        try:
+            self.depth = float(depth_token)
+            if self.depth < 0:
+                raise InvalidInputError("Глубина не может быть отрицательной.")
+        except ValueError:
+            raise InvalidInputError("Глубина должна быть числовым значением.")
 
-        Args:
-            salinity (float): Значение солености.
-
-        Returns:
-            float: Корректное значение солености.
-
-        Raises:
-            ValueError: Если соленость отрицательная.
-        """
-        if salinity < 0:
-            raise ValueError("Соленость не может быть отрицательной.")
-        return salinity
+        try:
+            self.salinity = float(salinity_token)
+            if self.salinity < 0:
+                raise InvalidInputError("Соленость не может быть отрицательной.")
+        except ValueError:
+            raise InvalidInputError("Соленость должна быть числовым значением.")
 
     def __str__(self):
         """Возвращает строковое представление объекта Sea."""
-        return f'"{self.name}" {self.depth} {self.salinity}'
+        return ' '.join(self.tokens)
